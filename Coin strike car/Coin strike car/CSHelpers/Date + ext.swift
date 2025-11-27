@@ -2,7 +2,15 @@
 //  Date + ext.swift
 //  Coin strike car
 //
-//  Created by Dias Atudinov on 27.11.2025.
 //
 
-import Foundation
+import SwiftUI
+
+extension DateFormatter {
+    static let shortEnglish: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "dd MMM yyyy"
+        df.locale = Locale(identifier: "en_US_POSIX")
+        return df
+    }()
+}

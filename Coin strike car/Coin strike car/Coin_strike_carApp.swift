@@ -2,7 +2,6 @@
 //  Coin_strike_carApp.swift
 //  Coin strike car
 //
-//  Created by Dias Atudinov on 27.11.2025.
 //
 
 import SwiftUI
@@ -11,7 +10,7 @@ import SwiftUI
 struct Coin_strike_carApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CSAddCarView(carViewModel: CarViewModel())
         }
     }
 }

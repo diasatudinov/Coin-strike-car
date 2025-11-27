@@ -1,5 +1,5 @@
 //
-//  CarViewModel.swift
+//  CSCarViewModel.swift
 //  Coin strike car
 //
 //
@@ -11,25 +11,33 @@ class CarViewModel: ObservableObject {
     @Published var myCars: [Car] = [
         
     ] {
-        didSet { saveMyDives() }
+        didSet { saveMyCars() }
     }
     
-    @Published var currentCar: Car?
+    @Published var currentCar: Car? {
+        didSet { saveCurrentCar() }
+    }
     
     // MARK: – UserDefaults keys
-    private var fileURL: URL {
+    private var myCarsfileURL: URL {
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return dir.appendingPathComponent("myCars.json")
     }
+    
+    private var currentCarfileURL: URL {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        return dir.appendingPathComponent("currentCar.json")
+    }
     // MARK: – Init
     init() {
-        loadMyDives()
+        loadMyCars()
+        loadCurrentCar()
     }
     
-    // MARK: – Save / Load Backgrounds
+    // MARK: – Save / Load MY CARS
     
-    private func saveMyDives() {
-        let url = fileURL
+    private func saveMyCars() {
+        let url = myCarsfileURL
         do {
             let data = try JSONEncoder().encode(myCars)
             try data.write(to: url, options: [.atomic])
@@ -38,8 +46,8 @@ class CarViewModel: ObservableObject {
         }
     }
     
-    private func loadMyDives() {
-        let url = fileURL
+    private func loadMyCars() {
+        let url = myCarsfileURL
         guard FileManager.default.fileExists(atPath: url.path) else {
             return
         }
@@ -48,6 +56,33 @@ class CarViewModel: ObservableObject {
             let data = try Data(contentsOf: url)
             let dives = try JSONDecoder().decode([Car].self, from: data)
             myCars = dives
+        } catch {
+            print("Failed to load myDives:", error)
+        }
+    }
+    
+    // MARK: SAVE CurrentCar
+    
+    private func saveCurrentCar() {
+        let url = currentCarfileURL
+        do {
+            let data = try JSONEncoder().encode(currentCar)
+            try data.write(to: url, options: [.atomic])
+        } catch {
+            print("Failed to save myDives:", error)
+        }
+    }
+    
+    private func loadCurrentCar() {
+        let url = currentCarfileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let savedCar = try JSONDecoder().decode(Car.self, from: data)
+            currentCar = savedCar
         } catch {
             print("Failed to load myDives:", error)
         }

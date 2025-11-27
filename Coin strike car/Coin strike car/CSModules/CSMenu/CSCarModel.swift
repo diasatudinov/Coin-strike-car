@@ -1,5 +1,5 @@
 //
-//  CarModel.swift
+//  CSCarModel.swift
 //  Coin strike car
 //
 //
@@ -12,7 +12,7 @@ struct Car: Codable, Hashable, Identifiable {
     let model: String
     let year: String
     let mileage: String
-    let vin: String?
+    let vin: String
     var imageData: Data?
     
     var image: UIImage? {

@@ -10,7 +10,7 @@ import SwiftUI
 struct Coin_strike_carApp: App {
     var body: some Scene {
         WindowGroup {
-            CSAddCarView(carViewModel: CarViewModel())
+            CSMenuContainerView()
         }
     }
 }

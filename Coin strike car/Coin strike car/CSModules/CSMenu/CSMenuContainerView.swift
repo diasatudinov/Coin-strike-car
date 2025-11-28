@@ -39,11 +39,9 @@ struct BBMenuView: View {
             
             switch selectedTab {
             case 0:
-                Color.red.ignoresSafeArea()
-//                BBMyDivesView(viewModel: diveViewModel)
+                CSHomeView(viewModel: carViewModel)
             case 1:
-                Color.blue.opacity(0.5).ignoresSafeArea()
-//                BBDiveCalendarView(viewModel: diveViewModel)
+                CSExpensesView(viewModel: carViewModel)
             case 2:
                 Color.green.ignoresSafeArea()
 //                DiveMoodStatsView(viewModel: diveViewModel)
@@ -90,7 +88,9 @@ struct BBMenuView: View {
             .ignoresSafeArea()
             
             
-        }
+        }.sheet(isPresented: $carViewModel.showAddNewCar, content: {
+            CSAddCarView(carViewModel: carViewModel)
+        })
     }
     
     private func icon(for index: Int) -> String {

@@ -10,7 +10,9 @@ class CarViewModel: ObservableObject {
     // MARK: – Dives
     @Published var myCars: [Car] = [
     ] {
-        didSet { saveMyCars() }
+        didSet {
+            saveMyCars()
+        }
     }
     
     @Published var currentCar: Car? {
@@ -118,5 +120,14 @@ class CarViewModel: ObservableObject {
             return sum
         }
         return 0
+    }
+    
+    func sumSpendings(spendings: [Spending]) -> Decimal {
+        var sum: Decimal = 0.0
+        for spending in spendings {
+            sum += spending.value
+        }
+        return sum
+        
     }
 }

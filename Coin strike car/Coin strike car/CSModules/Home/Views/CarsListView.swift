@@ -58,6 +58,15 @@ struct CarsListView: View {
                 
                 Button {
                     viewModel.delete(myCar: car)
+                    
+                    if viewModel.currentCar == car, !viewModel.myCars.isEmpty {
+                        viewModel.currentCar = viewModel.myCars.first
+                    }
+                    
+                    if viewModel.myCars.isEmpty {
+                        viewModel.currentCar = nil
+                    }
+                    showCarsList = false
                 } label: {
                     Image(.deleteIconCS)
                         .resizable()

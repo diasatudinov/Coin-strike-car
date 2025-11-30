@@ -107,7 +107,7 @@ struct CSHomeView: View {
                                         
                                     }
                                     
-                                    DonutChartView(spendings: currentCar.spendings)
+                                    DonutChartView(spendings: currentCar.spendings.makeSlicesForCurrentMonth())
                                         .padding(.vertical)
                                         .padding(.bottom, 10)
                                     
@@ -202,13 +202,13 @@ struct CSHomeView: View {
                             
                     }
                 }.padding(.horizontal, 20)
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 110)
             }
     }
     
     private func dateFormatter(date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd.mm"
+        formatter.dateFormat = "dd.MM"
         let name = formatter.string(from: date)
         return name.prefix(1).uppercased() + name.dropFirst()
     }
@@ -237,30 +237,20 @@ struct SpendingSlice: Identifiable {
 }
 
 extension Array where Element == Spending {
-    /// Траты только за текущий месяц
-    var currentMonthSpendings: [Spending] {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        return filter { spending in
-            calendar.isDate(spending.date, equalTo: now, toGranularity: .month)
-        }
-    }
     
-    /// Превращаем в слайсы для диаграммы
-    func makeSlicesForCurrentMonth() -> [SpendingSlice] {
-        let monthSpendings = currentMonthSpendings
-        
+    // MARK: - Базовый хелпер для сборки слайсов
+    
+    private func makeSlices(from spendings: [Spending]) -> [SpendingSlice] {
         // Сумма по каждому SpendingType
         var dict: [SpendingType: Decimal] = [:]
-        for spending in monthSpendings {
+        for spending in spendings {
             dict[spending.spending, default: 0] += spending.value
         }
         
         let total = dict.values.reduce(0, +).doubleValue
         guard total > 0 else { return [] }
         
-        // Можно отсортировать по сумме (по убыванию)
+        // Сортируем по сумме (по убыванию)
         let sorted = dict.sorted { $0.value.doubleValue > $1.value.doubleValue }
         
         var result: [SpendingSlice] = []
@@ -283,17 +273,101 @@ extension Array where Element == Spending {
         
         return result
     }
+    
+    // MARK: - Фильтры по датам
+    
+    private func filtered(from startDate: Date?, to endDate: Date?) -> [Spending] {
+        filter { spending in
+            let date = spending.date
+            if let start = startDate, date < start { return false }
+            if let end = endDate, date > end { return false }
+            return true
+        }
+    }
+    
+    // Траты за текущий месяц (календарный)
+    var currentMonthSpendings: [Spending] {
+        let calendar = Calendar.current
+        let now = Date()
+        return filter { spending in
+            calendar.isDate(spending.date, equalTo: now, toGranularity: .month)
+        }
+    }
+    
+    // Траты за прошлый месяц (предыдущий календарный месяц)
+    var lastMonthSpendings: [Spending] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let lastMonthDate = calendar.date(byAdding: .month, value: -1, to: now) else {
+            return []
+        }
+        return filter { spending in
+            calendar.isDate(spending.date, equalTo: lastMonthDate, toGranularity: .month)
+        }
+    }
+    
+    // Последние 3 месяца (от сегодняшней даты включительно)
+    var last3MonthsSpendings: [Spending] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let start = calendar.date(byAdding: .month, value: -3, to: now) else { return [] }
+        return filtered(from: start, to: now)
+    }
+    
+    // Последние 6 месяцев
+    var last6MonthsSpendings: [Spending] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let start = calendar.date(byAdding: .month, value: -6, to: now) else { return [] }
+        return filtered(from: start, to: now)
+    }
+    
+    // Последний год (12 месяцев от сегодня)
+    var lastYearSpendings: [Spending] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let start = calendar.date(byAdding: .year, value: -1, to: now) else { return [] }
+        return filtered(from: start, to: now)
+    }
+    
+    // Все время
+    var allTimeSpendings: [Spending] {
+        self
+    }
+    
+    // MARK: - Публичные функции для диаграммы
+    
+    func makeSlicesForCurrentMonth() -> [SpendingSlice] {
+        makeSlices(from: currentMonthSpendings)
+    }
+    
+    func makeSlicesForLastMonth() -> [SpendingSlice] {
+        makeSlices(from: lastMonthSpendings)
+    }
+    
+    func makeSlicesForLast3Months() -> [SpendingSlice] {
+        makeSlices(from: last3MonthsSpendings)
+    }
+    
+    func makeSlicesForLast6Months() -> [SpendingSlice] {
+        makeSlices(from: last6MonthsSpendings)
+    }
+    
+    func makeSlicesForLastYear() -> [SpendingSlice] {
+        makeSlices(from: lastYearSpendings)
+    }
+    
+    func makeSlicesForAllTime() -> [SpendingSlice] {
+        makeSlices(from: allTimeSpendings)
+    }
 }
 
 struct DonutChartView: View {
-    let spendings: [Spending]
+    var spendings: [SpendingSlice]
     
-    private var slices: [SpendingSlice] {
-        spendings.makeSlicesForCurrentMonth()
-    }
     
     private var totalValue: Decimal {
-        slices.reduce(0) { $0 + $1.value }
+        spendings.reduce(0) { $0 + $1.value }
     }
     
     private var currentMonthName: String {
@@ -319,7 +393,7 @@ struct DonutChartView: View {
                     let lineWidth = min(geo.size.width, geo.size.height) * 0.18
                     
                     ZStack {
-                        ForEach(slices) { slice in
+                        ForEach(spendings) { slice in
                             Circle()
                                 .trim(from: slice.start, to: slice.end)
                                 .stroke(
@@ -354,9 +428,9 @@ struct DonutChartView: View {
             }
             .frame(height: 150)
             
-            if !slices.isEmpty {
+            if !spendings.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(slices) { slice in
+                    ForEach(spendings) { slice in
                         HStack(spacing: 8) {
                             
                             Text("\(slice.type.rawValue) -")

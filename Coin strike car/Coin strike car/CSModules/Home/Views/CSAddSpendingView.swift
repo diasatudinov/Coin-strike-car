@@ -11,7 +11,7 @@ struct CSAddSpendingView: View {
     @ObservedObject var viewModel: CarViewModel
     @State var selectSpending: SpendingType
     @State private var value = ""
-    @State private var date = Date.now
+    @State var date = Date.now
     @State private var notes = ""
     @State private var mileage = ""
     @State private var selectWork: WorkType?
@@ -82,6 +82,7 @@ struct CSAddSpendingView: View {
                                     }
                                     .font(TextStyle.text.font)
                                     .foregroundStyle(.white)
+                                    .keyboardType(.decimalPad)
                                     
                                     Text("*")
                                         .font(TextStyle.h2.font)
@@ -119,7 +120,7 @@ struct CSAddSpendingView: View {
                                     }
                                     .font(TextStyle.text.font)
                                     .foregroundStyle(.white)
-                                    .keyboardType(.numberPad)
+                                    
                                     
                                     Text("*")
                                         .font(TextStyle.h2.font)

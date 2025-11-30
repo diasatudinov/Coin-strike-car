@@ -134,13 +134,13 @@ struct CSExpensesView: View {
                         
                 }
             }.padding(.horizontal, 20)
-                .padding(.bottom, 100)
+                .padding(.bottom, 110)
         }
     }
     
     private func dateFormatter(date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd.mm.YYYY"
+        formatter.dateFormat = "dd.MM.YYYY"
         let name = formatter.string(from: date)
         return name.prefix(1).uppercased() + name.dropFirst()
     }

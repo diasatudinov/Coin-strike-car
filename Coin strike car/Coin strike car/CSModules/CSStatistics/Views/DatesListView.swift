@@ -2,17 +2,42 @@
 //  DatesListView.swift
 //  Coin strike car
 //
-//  Created by Dias Atudinov on 29.11.2025.
 //
 
 import SwiftUI
 
 struct DatesListView: View {
+    @ObservedObject var viewModel: CarViewModel
+    @Binding var dataPeriod: FilterDataPeriod
+    @Binding var showDatesList: Bool
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading) {
+            
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(FilterDataPeriod.allCases, id: \.self) { item in
+                    HStack {
+                        Button {
+                            dataPeriod = item
+                            showDatesList = false
+                        } label: {
+                            
+                            Text("\(item.rawValue)")
+                                .font(TextStyle.h3.font)
+                                .foregroundStyle(.white)
+                        }
+                    }
+                }
+            }
+            
+            
+        }
+        .padding(20)
+        .background(.bg)
+        .clipShape(Rectangle())
     }
 }
 
 #Preview {
-    DatesListView()
+    DatesListView(viewModel: CarViewModel(), dataPeriod: .constant(.thisMonth), showDatesList: .constant(true)
+    )
 }

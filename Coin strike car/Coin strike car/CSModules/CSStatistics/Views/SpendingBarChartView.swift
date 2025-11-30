@@ -1,8 +1,16 @@
+//
+//  SpendingBarChartView.swift
+//  Coin strike car
+//
+//
+
+import SwiftUI
+
 struct SpendingBarChartView: View {
-    let spendings: [Spending]
-    
+    let spendings: [Spending]    // сюда можно передать уже отфильтрованный период (месяц / год)
+
     private var barData: [SpendingBarData] {
-        spendings.aggregatedByType()
+        spendings.aggregatedByTypeIncludingAllTypes()
     }
     
     private var maxValue: Double {
@@ -11,16 +19,18 @@ struct SpendingBarChartView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            if barData.isEmpty {
+            if barData.allSatisfy({ $0.totalValue == 0 }) {
+                // Все нули — можно показать заглушку
                 Text("No data")
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white.opacity(0.5))
                     .frame(maxWidth: .infinity, minHeight: 150)
             } else {
                 GeometryReader { geo in
                     let width = geo.size.width
                     let height = geo.size.height
                     
-                    let bottomPadding: CGFloat = 32      // место под подписи X
+                    let bottomPadding: CGFloat = 40      // место под подписи X
                     let topPadding: CGFloat = 8
                     let rightPadding: CGFloat = 24       // место под правую ось
                     let leftPadding: CGFloat = 8
@@ -34,58 +44,88 @@ struct SpendingBarChartView: View {
                     let barWidth = max((chartWidth - totalSpacing) / CGFloat(barCount), 4)
                     
                     ZStack {
-                        // Оси
+                        // Оси (X снизу, Y справа)
                         Path { path in
-                            // X ось (снизу)
-                            let yAxisLineY = height - bottomPadding
-                            path.move(to: CGPoint(x: leftPadding, y: yAxisLineY))
-                            path.addLine(to: CGPoint(x: leftPadding + chartWidth, y: yAxisLineY))
+                            // X ось
+                            let xAxisY = height - bottomPadding
+                            path.move(to: CGPoint(x: leftPadding, y: xAxisY))
+                            path.addLine(to: CGPoint(x: leftPadding + chartWidth, y: xAxisY))
                             
-                            // Y ось (справа)
-                            let xAxisLineX = leftPadding + chartWidth
-                            path.move(to: CGPoint(x: xAxisLineX, y: topPadding))
-                            path.addLine(to: CGPoint(x: xAxisLineX, y: yAxisLineY))
+                            // Y ось справа
+                            let yAxisX = leftPadding + chartWidth
+                            path.move(to: CGPoint(x: yAxisX, y: topPadding))
+                            path.addLine(to: CGPoint(x: yAxisX, y: xAxisY))
                         }
-                        .stroke(Color.yellow, lineWidth: 2)
+                        .stroke(Color.yellow, lineWidth: 1)
+                        .padding(.horizontal, 5)
                         
                         // Столбцы
                         ForEach(Array(barData.enumerated()), id: \.element.id) { index, item in
                             let value = item.totalValue.doubleValue
-                            let ratio = maxValue > 0 ? value / maxValue : 0
+                            
+                            // Если по типу не было value — даём минимальный процент
+                            let ratio = maxValue > 0 ? (value == 0 ? 0.05 : value / maxValue) : 0
+                            
                             let barHeight = CGFloat(ratio) * chartHeight
                             
                             let x = leftPadding + CGFloat(index) * (barWidth + barSpacing)
                             let y = (height - bottomPadding) - barHeight
                             
-                            VStack {
-                                // Бар
+                            VStack(spacing: 0) {
+                                // Столбец
                                 Rectangle()
                                     .fill(item.type.spendingColor)
                                     .frame(width: barWidth, height: barHeight)
-                                    .position(x: x + barWidth / 2, y: y + barHeight / 2)
+                                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
+                                    .position(x: x + barWidth / 2,
+                                              y: y + barHeight / 2)
+                                    
                                 
-                                // Подпись под баром (SpendingType)
+                                // Подпись под столбцом
                                 Text(item.type.rawValue)
-                                    .font(.caption2)
+                                    .font(.system(size: 5))
                                     .foregroundColor(.white)
-                                    .frame(width: barWidth + 12)    // чуть шире бара
+                                    .frame(width: max(barWidth + 10, 50))
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.6)
-                                    .rotationEffect(.degrees(-45))  // чтобы помещалось
-                                    .offset(
-                                        x: 0,
-                                        y: 16 // опустить ниже оси X
-                                    )
+                                    .offset(y: 16)
                                     .position(
                                         x: x + barWidth / 2,
-                                        y: height - bottomPadding + 8
+                                        y: height / 3.8
                                     )
                             }
                         }
                     }
                 }
-                .frame(height: 220)
+                .frame(height: 180)
             }
         }
     }
+}
+
+struct SpendingBarData: Identifiable {
+    let id = UUID()
+    let type: SpendingType
+    let totalValue: Decimal
+}
+
+extension Array where Element == Spending {
+    /// Аггрегируем по типам, включая все SpendingType (даже если по ним нет трат)
+    func aggregatedByTypeIncludingAllTypes() -> [SpendingBarData] {
+        // Сумма по каждому типу из фактических трат
+        var dict: [SpendingType: Decimal] = [:]
+        for spending in self {
+            dict[spending.spending, default: 0] += spending.value
+        }
+        
+        // Пробегаем по всем enum-кейсам, даже если суммы нет
+        return SpendingType.allCases.map { type in
+            let total = dict[type] ?? 0
+            return SpendingBarData(type: type, totalValue: total)
+        }.reversed()
+    }
+}
+
+#Preview {
+    CSStatisticsView(viewModel: CarViewModel())
 }

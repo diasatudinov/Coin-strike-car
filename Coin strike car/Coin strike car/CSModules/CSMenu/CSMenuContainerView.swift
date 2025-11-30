@@ -43,11 +43,9 @@ struct BBMenuView: View {
             case 1:
                 CSExpensesView(viewModel: carViewModel)
             case 2:
-                Color.green.ignoresSafeArea()
-//                DiveMoodStatsView(viewModel: diveViewModel)
+                CSStatisticsView(viewModel: carViewModel)
             case 3:
-                Color.purple.ignoresSafeArea()
-//                DiveMoodStatsView(viewModel: diveViewModel)
+                CSCalendarView(viewModel: carViewModel)
             default:
                 Text("default")
             }

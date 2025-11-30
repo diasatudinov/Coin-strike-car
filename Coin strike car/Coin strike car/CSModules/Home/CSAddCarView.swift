@@ -172,7 +172,7 @@ struct CSAddCarView: View {
                             carViewModel.currentCar = carViewModel.myCars.first
                         } else {
                             let car = Car(make: make, model: model, year: year, mileage: mileage, vin: vin, spendings: [])
-                            carViewModel.currentCar = car
+                            carViewModel.myCars.append(car)
                             carViewModel.currentCar = carViewModel.myCars.first
                         }
                         carViewModel.showAddNewCar = false

@@ -133,8 +133,9 @@ struct CSExpensesView: View {
                         
                         
                 }
-            }.padding(.horizontal, 20)
-                .padding(.bottom, 110)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 110)
         }
     }
     
